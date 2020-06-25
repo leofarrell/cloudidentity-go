@@ -1,16 +1,11 @@
 package securityverify
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-)
-
-const (
-	CONTENT_JSON = "application/json"
 )
 
 func traceBody(result *http.Response) {
@@ -24,12 +19,16 @@ func traceBody(result *http.Response) {
 	}
 }
 
-func structToJson(obj interface{}) (io.Reader, error) {
+func outputPipe(intput interface{}) *io.PipeReader {
+	r, w := io.Pipe()
 
-	jb, err := json.Marshal(obj)
+	go func() {
+		err := json.NewEncoder(w).Encode(intput)
+		if err != nil {
+			log.Print("Error encoding body(Programming error?", err.Error())
+		}
+		w.Close()
 
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewBuffer(jb), nil
+	}()
+	return r
 }

@@ -1,77 +1,55 @@
 package securityverify
 
 import (
-	"fmt"
-	"io"
-	"log"
 	"net/http"
 )
 
-func (c *SVClient) Get(path string, expected int) (*http.Response, *SVError, error) {
+// SVClient calls Security verify APIs
+type SVClient interface {
+	// addAuthorization to the provided request
+	addAuthorization(r *http.Request) (*http.Request, error)
 
-	url := fmt.Sprintf("https://%s%s", c.tenantId, path)
-	request, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Printf("Error calling [%s]: %s\n", url, error.Error)
-		return nil, nil, err
-	}
-	request.Header.Add("authorization", fmt.Sprintf("bearer %s", c.Token()))
-
-	result, err := c.Do(request)
-
-	if err != nil {
-		log.Printf("Error calling [%s]: %s\n", url, error.Error)
-		return nil, nil, err
-	}
-	if result.StatusCode != expected {
-		return nil, NewSVError(result), nil
-
-	}
-	return result, nil, nil
+	// tenant invoked by this client
+	Tenant() string
 }
 
-func (c *SVClient) Delete(path string, expected int) (*http.Response, *SVError, error) {
+// svProtocolClient knows the HTTP protocol requirements for a given api.
+type svProtocolClient interface {
+	SVClient
 
-	url := fmt.Sprintf("https://%s%s", c.tenantId, path)
-	request, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		log.Printf("Error calling [%s]: %s\n", url, error.Error)
-		return nil, nil, err
-	}
-	request.Header.Add("authorization", fmt.Sprintf("bearer %s", c.Token()))
+	// addContentType to the provided request
+	addContentType(r *http.Request) *http.Request
 
-	result, err := c.Do(request)
+	// addAccepts headers to the provided request
+	addAccepts(r *http.Request) *http.Request
 
-	if err != nil {
-		log.Printf("Error calling [%s]: %s\n", url, error.Error)
-		return nil, nil, err
-	}
-	if result.StatusCode != expected {
-		return nil, NewSVError(result), nil
-	}
-	return result, nil, nil
+	// client used for HTTP requests
+	client() *http.Client
 }
 
-func (c *SVClient) Post(path string, contentType string, body io.Reader, expected int) (*http.Response, *SVError, error) {
-	url := fmt.Sprintf("https://%s%s", c.tenantId, path)
-	request, err := http.NewRequest("POST", url, body)
-	if err != nil {
-		log.Printf("Error calling [%s]: %s\n", url, error.Error)
-		return nil, nil, err
-	}
-	request.Header.Add("authorization", fmt.Sprintf("bearer %s", c.Token()))
-	request.Header.Add("content-type", contentType)
+// DecoratedClient allows someone to affix their own changes to a given request
+type DecoratedClient interface {
+	svProtocolClient
 
-	result, err := c.Do(request)
-	if err != nil {
-		log.Printf("Error calling [%s]: %s\n", url, error.Error)
-		return nil, nil, err
-	}
+	// Decorate the request - default impl does nothing
+	DecorateRequest(r *http.Request) *http.Request
+}
 
-	if result.StatusCode != expected {
-		fmt.Printf("Unexpected status %d, wanted %d\n", result.StatusCode, expected)
-		return nil, NewSVError(result), nil
-	}
+type decorator struct {
+	decoratorFunc func(*http.Request) *http.Request
+}
 
-	return result, nil, nil
+func (d *decorator) SetDecorator(f func(*http.Request) *http.Request) {
+	d.decoratorFunc = f
+}
+
+func (d *decorator) DecorateRequest(r *http.Request) *http.Request {
+	if d.decoratorFunc != nil {
+		return d.decoratorFunc(r)
+	}
+	return r
+}
+
+func newDecorator() *decorator {
+	return &decorator{decoratorFunc: nil}
 }
