@@ -9,7 +9,7 @@ import (
 
 // EmailOtpEnrollment for a given user
 type EmailOtpEnrollment struct {
-	factorsEnrollment
+	FactorsEnrollment
 	Email   string `json:"email"`
 	Enabled bool   `json:"enabled"`
 }
@@ -77,7 +77,7 @@ func (f *FactorsClient) GetEmailOtpEnrollments(search string) ([]EmailOtpEnrollm
 
 // EmailOtpVerification structure from initaion
 type EmailOtpVerification struct {
-	factorsBase
+	FactorsBase
 	State        string `json:"state"`
 	EmailAddress string `json:"emailAddress"`
 	Correlation  string `json:"correlation"`
@@ -121,7 +121,7 @@ func (f *FactorsClient) ValidateEmailOtp(otp, enrollmentID, transactionID string
 
 	asst := ""
 	if returnJwt {
-		asstBody := &factorsAssertion{}
+		asstBody := &FactorsAssertion{}
 		err := json.NewDecoder(response.Body).Decode(asstBody)
 		if err != nil {
 			return "", err

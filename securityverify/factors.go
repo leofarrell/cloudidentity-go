@@ -30,7 +30,8 @@ func (f *FactorsClient) SetDecorator(fn func(*http.Request) *http.Request) {
 	f.client.SetDecorator(fn)
 }
 
-type factorsBase struct {
+// FactorsBase is a common structure across enrollments and verifications
+type FactorsBase struct {
 	ID      string `json:"id,omitempty"`
 	UserID  string `json:"userId"`
 	Enabled bool   `json:"enabled"`
@@ -41,11 +42,13 @@ type factorsBase struct {
 	// TODO there are more fields which are generic
 }
 
-type factorsEnrollment struct {
-	factorsBase
+//FactorsEnrollment is an enrollment for a specific type
+type FactorsEnrollment struct {
+	FactorsBase
 	Attempted string `json:"attempted"`
 }
 
-type factorsAssertion struct {
+// FactorsAssertion
+type FactorsAssertion struct {
 	Assertion string `json:"assertion"`
 }
