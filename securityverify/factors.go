@@ -1,33 +1,54 @@
 package securityverify
 
-const (
-	USERNAME_PASSWORD = "/v1.0/authnmethods/password/"
-)
+import "net/http"
 
-type UP struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+// Factors API provider
+func (c *svJSONClient) Factors() *FactorsClient {
+	return &FactorsClient{client: c}
+
 }
 
-func (c *SVClient) UsernamePassword(username, password, identitysource string) (bool, error) {
+// Factors API provider
+func (c *SVAPIClient) Factors() *FactorsClient {
+	return &FactorsClient{client: newSVJSONClient(c)}
 
-	up := UP{Username: username, Password: password}
+}
 
-	jsonStream, err := structToJson(up)
+// Factors API provider
+func (bt *BearerToken) Factors() *FactorsClient {
+	return &FactorsClient{client: newSVJSONClient(bt)}
+}
 
-	if err != nil {
-		return false, err
-	}
+// FactorsClient calls all APIs relevent to authentication factors
+// These APIs are invoked with a bearer token issued to a user or API client
+type FactorsClient struct {
+	client *svJSONClient
+}
 
-	status, svError, err := c.Post(USERNAME_PASSWORD, CONTENT_JSON, jsonStream, 204)
+// SetDecorator to be used in requests with this FactorsClient
+func (f *FactorsClient) SetDecorator(fn func(*http.Request) *http.Request) {
+	f.client.SetDecorator(fn)
+}
 
-	if err != nil {
-		return false, err
-	}
-	if svError != nil {
-		return false, svError.Error()
-	}
+// FactorsBase is a common structure across enrollments and verifications
+type FactorsBase struct {
+	ID      string `json:"id,omitempty"`
+	UserID  string `json:"userId"`
+	Enabled bool   `json:"enabled"`
+	Updated string `json:"updated"`
+	Created string `json:"created"`
+	Type    string `json:"type"`
 
-	return status.StatusCode == 204, nil
+	// TODO there are more fields which are generic
+}
 
+//FactorsEnrollment is an enrollment for a specific type
+type FactorsEnrollment struct {
+	FactorsBase
+	Attempted string `json:"attempted"`
+}
+
+// FactorsAssertion
+type FactorsAssertion struct {
+	Assertion string `json:"assertion"`
 }

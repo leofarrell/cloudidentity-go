@@ -1,35 +1,33 @@
 package securityverify
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
-)
-
-const (
-	CONTENT_JSON = "application/json"
 )
 
 func traceBody(result *http.Response) {
 	if result != nil {
 		body, berr := ioutil.ReadAll(result.Body)
 		if berr != nil {
-			log.Printf("Error parsing body")
+			svlog.Printf("Error parsing body")
 		} else {
-			log.Printf("Error response body: \n----\n%s\n----\n", body)
+			svlog.Printf("Error response body: \n----\n%s\n----\n", body)
 		}
 	}
 }
 
-func structToJson(obj interface{}) (io.Reader, error) {
+func outputPipe(intput interface{}) *io.PipeReader {
+	r, w := io.Pipe()
 
-	jb, err := json.Marshal(obj)
+	go func() {
+		err := json.NewEncoder(w).Encode(intput)
+		if err != nil {
+			svlog.Print("Error encoding body(Programming error?", err.Error())
+		}
+		w.Close()
 
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewBuffer(jb), nil
+	}()
+	return r
 }
