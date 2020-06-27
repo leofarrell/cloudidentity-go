@@ -39,8 +39,9 @@ type decorator struct {
 	decoratorFunc func(*http.Request) *http.Request
 }
 
-func (d *decorator) SetDecorator(f func(*http.Request) *http.Request) {
+func (d *decorator) SetDecorator(f func(*http.Request) *http.Request) *decorator {
 	d.decoratorFunc = f
+	return d
 }
 
 func (d *decorator) DecorateRequest(r *http.Request) *http.Request {

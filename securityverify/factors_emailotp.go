@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 )
 
 // EmailOtpEnrollment for a given user
 type EmailOtpEnrollment struct {
-	FactorsEnrollment
+	factorsEnrollment
 	Email   string `json:"email"`
 	Enabled bool   `json:"enabled"`
 }
@@ -73,4 +74,61 @@ func (f *FactorsClient) GetEmailOtpEnrollments(search string) ([]EmailOtpEnrollm
 	}
 
 	return structure.EmailOTP, nil
+}
+
+// EmailOtpVerification structure from initaion
+type EmailOtpVerification struct {
+	factorsBase
+	State        string `json:"state"`
+	EmailAddress string `json:"emailAddress"`
+	Correlation  string `json:"correlation"`
+	EnrollmentID string `json:"-"`
+}
+
+//InitiateEmailOtp for a given enrollment
+func (f *FactorsClient) InitiateEmailOtp(enrollment string, emailOtpHint string, output *EmailOtpVerification) error {
+	r := outputPipe(&struct {
+		Correlation string `json:"correlation"`
+	}{Correlation: emailOtpHint})
+	response, err := post(f.client, fmt.Sprintf("%s/%s/%s", urlFactorsEmailotp, enrollment, constVerifications), r, 201)
+	if err != nil {
+		return err
+	}
+
+	err = json.NewDecoder(response.Body).Decode(output)
+	if err != nil {
+		return err
+	}
+
+	output.EnrollmentID = enrollment
+	return nil
+}
+
+// ValidateEmailOtp presents the provided email otp to a enrollment and transaction
+// See: https://myidp.ice.ibmcloud.com/developer/explorer/#!/Email_One-time_Password_2.0/attemptEmailotpVerification_2_0
+func (f *FactorsClient) ValidateEmailOtp(otp, enrollmentID, transactionID string, returnJwt bool) (string, error) {
+	r := outputPipe(&struct {
+		OTP string `json:"otp"`
+	}{OTP: otp})
+
+	expected := 204
+	if returnJwt {
+		expected = 200
+	}
+	response, err := post(f.client, fmt.Sprintf("%s/%s/%s/%s?returnJwt=%s", urlFactorsEmailotp, enrollmentID, constVerifications, transactionID, strconv.FormatBool(returnJwt)), r, expected)
+	if err != nil {
+		return "", err
+	}
+
+	asst := ""
+	if returnJwt {
+		asstBody := &factorsAssertion{}
+		err := json.NewDecoder(response.Body).Decode(asstBody)
+		if err != nil {
+			return "", err
+		}
+		asst = asstBody.Assertion
+	}
+	return asst, nil
+
 }

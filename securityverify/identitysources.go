@@ -17,11 +17,19 @@ type IdentitySource struct {
 	ID                string                        `json:"id"`
 }
 
+type IdentitySourcesClient struct {
+	client *svJSONClient
+}
+
+func (c *SVAPIClient) IdentitySources() *IdentitySourcesClient {
+	return &IdentitySourcesClient{client: newSVJSONClient(c)}
+}
+
 // GetIdentitySources configured
 // See: https://myidp.ice.ibmcloud.com/developer/explorer/#!/Identity_Sources/getInstances
-func (sv *SVJSONClient) GetIdentitySources() ([]IdentitySource, error) {
+func (sv *IdentitySourcesClient) GetIdentitySources() ([]IdentitySource, error) {
 
-	rsp, err := get(sv, urlIdentitySources, 200)
+	rsp, err := get(sv.client, urlIdentitySources, 200)
 	if err != nil {
 		log.Printf("Err: %s", err.Error())
 		return nil, err
@@ -36,7 +44,7 @@ func (sv *SVJSONClient) GetIdentitySources() ([]IdentitySource, error) {
 }
 
 // GetCloudDirectoryIdentitySource returns the identity source matcing the name 'Cloud Directory'
-func (sv *SVJSONClient) GetCloudDirectoryIdentitySource() (string, error) {
+func (sv *IdentitySourcesClient) GetCloudDirectoryIdentitySource() (string, error) {
 
 	srcs, err := sv.GetIdentitySources()
 
