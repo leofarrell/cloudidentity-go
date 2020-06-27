@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -56,7 +55,7 @@ func (sv *SVAPIClient) Token() (string, error) {
 
 	lifeLeft := sv.expires.Sub(time.Now())
 
-	log.Printf("Token has %s to live", lifeLeft.String())
+	svlog.Printf("Token has %s to live", lifeLeft.String())
 
 	// IDEA: use a goroutine to wake up near end of life and get a new token to avoid ever having any doing this refresh on a main thread
 
@@ -66,17 +65,17 @@ func (sv *SVAPIClient) Token() (string, error) {
 func (sv *SVAPIClient) refresh() error {
 
 	if sv.clientSecret == "" {
-		log.Printf("Warning, api client secret missing")
+		svlog.Printf("Warning, api client secret missing")
 	}
 
 	body := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s", sv.clientID, sv.clientSecret)
-	log.Print(strings.ReplaceAll(body, sv.clientSecret, "****"))
+	svlog.Print(strings.ReplaceAll(body, sv.clientSecret, "****"))
 	url := fmt.Sprintf("https://%s%s", sv.tenantID, urlOidcToken)
-	log.Print(url)
+	svlog.Print(url)
 	request, err := http.NewRequest("POST", url,
 		strings.NewReader(body))
 	if err != nil {
-		log.Print(err)
+		svlog.Print(err)
 		return err
 	}
 
@@ -89,7 +88,7 @@ func (sv *SVAPIClient) refresh() error {
 
 	result, err := client.Do(request)
 	if err != nil {
-		log.Print(err)
+		svlog.Print(err)
 		return err
 	}
 	if result.StatusCode != 200 {
@@ -107,7 +106,7 @@ func (sv *SVAPIClient) refresh() error {
 	if value, ok := jsonData["expires_in"]; ok {
 		sv.expires = time.Now().Add(time.Second * time.Duration(value.(float64)))
 	}
-	log.Printf("Token %s expires: %s", sv.token, sv.expires.String())
+	svlog.Printf("Token %s expires: %s", sv.token, sv.expires.String())
 	return nil
 }
 

@@ -2,7 +2,6 @@ package securityverify
 
 import (
 	"encoding/json"
-	"log"
 )
 
 // IdentitySource as it is defined.
@@ -31,7 +30,7 @@ func (sv *IdentitySourcesClient) GetIdentitySources() ([]IdentitySource, error) 
 
 	rsp, err := get(sv.client, urlIdentitySources, 200)
 	if err != nil {
-		log.Printf("Err: %s", err.Error())
+		svlog.Printf("Err: %s", err.Error())
 		return nil, err
 	}
 

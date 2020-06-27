@@ -35,4 +35,4 @@ const (
 	scimUserSchema = "urn:ietf:params:scim:schemas:core:2.0:User"
 )
 
-var svlog = log.New(os.Stderr, "[ securityverify ]", log.Ltime|log.Lshortfile)
+var svlog = log.New(os.Stderr, "[securityverify] ", log.Ltime|log.Lshortfile)

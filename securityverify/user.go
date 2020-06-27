@@ -3,7 +3,6 @@ package securityverify
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 )
 
@@ -89,7 +88,7 @@ func (sv *UserClient) FindUser(userName string) (*User, error) {
 		return nil, err
 	}
 
-	log.Print("Find result:", result)
+	svlog.Print("Find result:", result)
 
 	if len(result) > 0 {
 		return &result[0], nil
@@ -111,6 +110,6 @@ func (sv *UserClient) CreateUser(user *User) (*User, error) {
 
 	resultUser := &User{}
 	json.NewDecoder(result.Body).Decode(resultUser)
-	log.Print("Create user result ", resultUser)
+	svlog.Print("Create user result ", resultUser)
 	return resultUser, nil
 }

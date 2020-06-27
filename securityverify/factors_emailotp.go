@@ -3,7 +3,6 @@ package securityverify
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"strconv"
 )
@@ -65,8 +64,8 @@ func (f *FactorsClient) GetEmailOtpEnrollments(search string) ([]EmailOtpEnrollm
 		Count    int
 	}{}
 
-	log.Print("Found ", structure.Count)
-	log.Print("Found ", structure.EmailOTP)
+	svlog.Print("Found ", structure.Count)
+	svlog.Print("Found ", structure.EmailOTP)
 
 	err = json.NewDecoder(rsp.Body).Decode(&structure)
 	if err != nil {
