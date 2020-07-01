@@ -103,9 +103,9 @@ func (f *FactorsClient) InitiateEmailOtp(enrollment string, emailOtpHint string,
 	return nil
 }
 
-// ValidateEmailOtp presents the provided email otp to a enrollment and transaction
+// ValidateEmailOTP presents the provided email otp to a enrollment and transaction
 // See: https://myidp.ice.ibmcloud.com/developer/explorer/#!/Email_One-time_Password_2.0/attemptEmailotpVerification_2_0
-func (f *FactorsClient) ValidateEmailOtp(otp, enrollmentID, transactionID string, returnJwt bool) (string, error) {
+func (f *FactorsClient) ValidateEmailOTP(otp, enrollmentID, transactionID string, returnJwt bool) (string, error) {
 	r := outputPipe(&struct {
 		OTP string `json:"otp"`
 	}{OTP: otp})
@@ -129,5 +129,18 @@ func (f *FactorsClient) ValidateEmailOtp(otp, enrollmentID, transactionID string
 		asst = asstBody.Assertion
 	}
 	return asst, nil
+
+}
+
+// DeleteEmailOTPVerification deletes an email OTP transaction
+// See:https://myidp.ice.ibmcloud.com/developer/explorer/#!/Email_One-time_Password_2.0/deleteEmailotpVerification_2_0
+func (f *FactorsClient) DeleteEmailOTPVerification(enrollmentID, transactionID string) error {
+
+	_, err := delete(f.client, fmt.Sprintf("%s/%s/%s/%s", urlFactorsEmailotp, enrollmentID, constVerifications, transactionID), 204)
+	if err != nil {
+		return err
+	}
+
+	return nil
 
 }

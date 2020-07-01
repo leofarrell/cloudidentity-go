@@ -107,19 +107,23 @@ func (oidc *OIDCClient) TokenRef(grantType string, scope string, extra url.Value
 	return nil
 }
 
-type IntrosepctResponse struct {
-	Active       bool                   `json:"active"`
-	Exp          int64                  `json:"exp"`
-	ClientID     string                 `json:"client_id"`
-	Scope        string                 `json:"scope"`
-	Sub          string                 `json:"sub"`
-	TokenType    string                 `json:"token_type"`
-	GrantType    string                 `json:"grant_type"`
-	Entitlements []string               `json:"entitlements"`
-	Ext          map[string]interface{} `json:"ext"`
+type IntrospectResponseExtension struct {
+	TenantId string `json:tenantId,omitempty`
 }
 
-func (oidc *OIDCClient) Introspect(token string, extra url.Values) (*IntrosepctResponse, error) {
+type IntrospectResponse struct {
+	Active       bool                         `json:"active"`
+	Exp          int64                        `json:"exp"`
+	ClientID     string                       `json:"client_id"`
+	Scope        string                       `json:"scope"`
+	Sub          string                       `json:"sub"`
+	TokenType    string                       `json:"token_type"`
+	GrantType    string                       `json:"grant_type"`
+	Entitlements []string                     `json:"entitlements,omitempty"`
+	Ext          *IntrospectResponseExtension `json:"ext"`
+}
+
+func (oidc *OIDCClient) Introspect(token string, extra url.Values, output interface{}) error {
 	if extra == nil {
 		extra = url.Values{}
 	} else {
@@ -133,12 +137,10 @@ func (oidc *OIDCClient) Introspect(token string, extra url.Values) (*IntrosepctR
 
 	rsp, err := post(oidc, urlOidcIntrospect, strings.NewReader(extra.Encode()), 200)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	introspect := &IntrosepctResponse{}
+	json.NewDecoder(rsp.Body).Decode(output)
 
-	json.NewDecoder(rsp.Body).Decode(introspect)
-
-	return introspect, nil
+	return nil
 }
