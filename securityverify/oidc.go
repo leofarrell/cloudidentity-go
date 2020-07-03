@@ -112,15 +112,18 @@ type IntrospectResponseExtension struct {
 }
 
 type IntrospectResponse struct {
-	Active       bool                         `json:"active"`
-	Exp          int64                        `json:"exp"`
-	ClientID     string                       `json:"client_id"`
-	Scope        string                       `json:"scope"`
-	Sub          string                       `json:"sub"`
-	TokenType    string                       `json:"token_type"`
-	GrantType    string                       `json:"grant_type"`
-	Entitlements []string                     `json:"entitlements,omitempty"`
-	Ext          *IntrospectResponseExtension `json:"ext"`
+	Active       bool     `json:"active"`
+	Exp          int64    `json:"exp"`
+	Iat          int64    `json:"iat"`
+	ClientID     string   `json:"client_id"`
+	Scope        string   `json:"scope"`
+	Sub          string   `json:"sub"`
+	TokenType    string   `json:"token_type"`
+	GrantType    string   `json:"grant_type"`
+	Entitlements []string `json:"entitlements,omitempty"`
+	AMR          []string `json:"amr,omitempty"`
+
+	Ext *IntrospectResponseExtension `json:"ext"`
 }
 
 func (oidc *OIDCClient) Introspect(token string, extra url.Values, output interface{}) error {
